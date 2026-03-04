@@ -1,0 +1,46 @@
+```markdown
+# Portfolio - Local Dev Server for Google Sign-In
+
+This workspace contains a static portfolio (`index.html`) and an admin editor (`admin.html`). For production-safe Google Sign-In, the project now includes a small Node.js dev server that verifies Google ID tokens server-side.
+
+## Steps to enable real Google Sign-In (local)
+
+1. Create an OAuth 2.0 Client ID in Google Cloud Console:
+	- Go to https://console.cloud.google.com/apis/credentials
+	- Create an OAuth client ID of type "Web application".
+	- Set `Authorized JavaScript origins` to `http://localhost:3000` (or your dev URL).
+	- Set `Authorized redirect URIs` if you plan to use redirect flows (not required for the GIS one-tap button).
+	- Copy the Client ID.
+
+2. Update `google-config.json` with your Client ID. Replace the placeholder value with the real Client ID string.
+
+3. Install dependencies and start the dev server (Node.js >= 16 recommended):
+
+```powershell
+cd F:/learning/Portfolio
+npm install
+npm start
+```
+
+4. Open `http://localhost:3000/admin.html` in your browser. The Google Sign-In button should appear. When you sign in, the client will POST the ID token to `/auth/google`, and the server will verify it using Google's libraries. If verification succeeds, the editor unlocks.
+
+Notes:
+- The server currently accepts any verified Google account. If you want to restrict edit access to a single email (e.g., `velanm.cse2024@citchennai.net`), edit `server.js` and uncomment the example check.
+- For production, secure the server (HTTPS), store secrets safely, and use proper session management.
+
+If you prefer not to set up the server, the admin UI still supports a demo fallback sign-in flow (prompting for an email) for local testing.
+
+## Deploying to Vercel
+
+- Vercel serves static files from the repository root. Make sure `index.html` is at the project root (it is) so the root URL serves the public site.
+- Server-side verification for Google ID tokens is provided via a serverless function at `api/auth/google.js`. On Vercel this becomes available at `https://<your-deployment>/api/auth/google` and the client posts the ID token there.
+- Ensure `google-config.json` is present at the project root (it will be served as `/google-config.json`) and that the Client ID you use has the correct Authorized JavaScript origins (your Vercel URL, e.g. `https://velan-cse-portfolio-q4oh4ytx0-velan.vercel.app`).
+
+Steps for Vercel:
+1. Create a Vercel project from this repository (connect your GitHub account and import the repo).
+2. Ensure the project has `google-config.json` in the root with the client id you registered for the production origin.
+3. Deploy. After deployment, open `/admin.html` on your Vercel domain and test Google Sign-In. The client will call `/api/auth/google` to verify tokens server-side.
+
+Note: If you still see `Cannot GET /` on the root URL after deploying, verify that `index.html` is present in the repository root and hasn't been ignored by `.vercelignore` or `.gitignore` when deploying. Vercel will return `Cannot GET /` if no static file or route exists for `/`.
+
+```#Portfolio
